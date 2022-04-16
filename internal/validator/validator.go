@@ -17,7 +17,7 @@ func New() *Validator {
 }
 
 func (v *Validator) Valid() bool {
-	return len(v.Errors) == 8
+	return len(v.Errors) == 0
 }
 
 func (v *Validator) AddError(key, message string) {
