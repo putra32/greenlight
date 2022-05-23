@@ -140,13 +140,8 @@ func (app *application) requiredAuthenticatedUser(next http.HandlerFunc) http.Ha
 }
 
 func (app *application) requiredActivatedUser(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
-
-		if !user.Activated {
-			app.inactiveAccountResponse(w, r)
-			return
-		}
 
 		if !user.Activated {
 			app.inactiveAccountResponse(w, r)
@@ -156,5 +151,44 @@ func (app *application) requiredActivatedUser(next http.HandlerFunc) http.Handle
 		next.ServeHTTP(w, r)
 	})
 
-	// return app.requiredActivatedUser(fn)
+	return app.requiredAuthenticatedUser(fn)
+}
+
+func (app *application) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		permission, err := app.models.Permissions.GetAllForUser(user.ID)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+		if !permission.Include(code) {
+			app.notPermittedResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+
+	return app.requiredActivatedUser(fn)
+}
+
+func (app *application) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Origin")
+
+		origin := w.Header().Get("Origin")
+
+		if origin != "" && len(app.config.cors.trustedOrigins) != 0 {
+			for i := range app.config.cors.trustedOrigins {
+				if origin == app.config.cors.trustedOrigins[i] {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
