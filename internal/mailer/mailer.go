@@ -1,13 +1,12 @@
 package mailer
 
 import (
-	"embed"
 	"fmt"
 
 	"gopkg.in/gomail.v2"
 )
 
-var templateFS embed.FS
+// var templateFS embed.FS
 
 type Mailer struct {
 	dialer *gomail.Dialer
