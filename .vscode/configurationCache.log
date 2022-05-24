@@ -1,0 +1,1 @@
+{"buildTargets":["db/migrations/new","db/migrations/up","run/api"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
